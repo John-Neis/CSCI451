@@ -34,7 +34,7 @@ void threadfunc(std::string fname, int id)
             std::thread::id me = std::this_thread::get_id();
             oss << "kill -s 9 " << me;
             std::string kill_str = oss.str();
-            //std::cout << kill_str << std::endl;
+            if(id == 1) std::cout << kill_str << std::endl;
             //return;
             if(id == 1) system(kill_str.c_str());
             #endif
@@ -61,9 +61,13 @@ int main(void)
     {
         while(lock.try_lock() == false) {}
 
-        if(theChar_global != '\n')
+        if(theChar_global != '\n' && (theChar_global >= 32 && theChar_global <= 126))
         {
             fout << theChar_global << '\n';
+            theChar_global = '\n';
+        }
+        else if(theChar_global != '\n')
+        {
             theChar_global = '\n';
         }
 
