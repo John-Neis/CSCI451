@@ -70,12 +70,13 @@ void *read_func2(void *arg)
             pthread_exit(&exitCode);
             #endif
             #ifdef CASE2
-            char kill_str[200];
-            pthread_t tid = pthread_self();
-            sprintf(kill_str, "kill -s 9 %lu", tid);
-            //puts(kill_str);
-            system(kill_str);
-            //pthread_exit(&exitCode);
+            //char *kill_me = malloc(sizeof(int));
+            //free(kill_me);
+            //free(kill_me);
+            char *kill_me = malloc(sizeof(int));
+            int i;
+            for(i = 0; i < 100; i++) free(kill_me);
+            printf("made it passed double free\n");
             #endif
         }
 
@@ -124,6 +125,7 @@ void *read_func3(void *arg)
 
 int main()
 {
+    
     if(pthread_mutex_init(&lock, NULL))
     {
         printf("Unable to initialize mutex. Terminating.\n");
