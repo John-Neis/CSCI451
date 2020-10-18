@@ -31,11 +31,28 @@ struct thread_args
     char *threadname;
 };
 
+char* filenames[] = 
+{
+    "Vlad.in", 
+    "Frank.in",
+    "Bigfoot.in",
+    "Casper.in",
+    "Gomez.in",
+    "Vlad",
+    "Frank",
+    "Bigfoot",
+    "Casper",
+    "Gomez"
+};
+
 void *thread_func(void *arg)
 {
     int exitCode = 0;
+    char in[255];
+
     struct thread_args *t_a = (struct thread_args *)arg;
     char *filename = t_a->filename;
+    
     FILE *file = fopen(filename, "r");
     if(!file)
     {
@@ -46,8 +63,7 @@ void *thread_func(void *arg)
 
     while(1)
     {
-        sleep(1);
-        char in[20];
+        sleep(0.25);
         fscanf(file, "%s\n", in);
         if(feof(file))
         {
@@ -61,14 +77,7 @@ void *thread_func(void *arg)
             while(1)
             {
                 fscanf(file, "%s\n", in);
-                //printf("%s\n", in);
-                if(feof(file))
-                {
-                    global_balance += global_temp;
-                    printf("Account balance after %s is $%.2f\n", t_a->threadname, global_balance);
-                    pthread_mutex_unlock(&m);
-                    break;
-                }
+                
                 if(in[0] == 'W')
                 {
                     global_balance += global_temp;
@@ -76,7 +85,15 @@ void *thread_func(void *arg)
                     pthread_mutex_unlock(&m);
                     break;
                 }
-                //printf("Adding %.2f\n", strtof(in, NULL));
+
+                if(feof(file))
+                {
+                    global_balance += global_temp;
+                    printf("Account balance after %s is $%.2f\n", t_a->threadname, global_balance);
+                    pthread_mutex_unlock(&m);
+                    break;
+                }
+                
                 global_temp += strtof(in, NULL);
                 
             }
@@ -88,14 +105,8 @@ void *thread_func(void *arg)
 
 int main(void)
 {
+
     #ifdef TEST
-    char* filenames[] = {
-        "Vlad.in",
-        "Frank.in",
-        "Bigfoot.in",
-        "Casper.in",
-        "Gomez.in"
-    };
     int i;
 
     for(i = 0; i < MONSTERS; i++)
@@ -122,6 +133,8 @@ int main(void)
     return 0;
     #endif
 
+    pthread_detach(pthread_self());
+
     if(pthread_mutex_init(&m, NULL))
     {
         printf("Unable to initialize mutex. Terminating.\n");
@@ -129,21 +142,15 @@ int main(void)
     }
     pthread_t t[MONSTERS];
     struct thread_args arglist[MONSTERS];
-    arglist[VLAD].filename = "Vlad.in"; arglist[VLAD].threadname = "Vlad";
-    arglist[FRANK].filename = "Frank.in"; arglist[FRANK].threadname = "Frank";
-    arglist[BIGFOOT].filename = "Bigfoot.in"; arglist[BIGFOOT].threadname = "Bigfoot";
-    arglist[CASPER].filename = "Casper.in"; arglist[CASPER].threadname = "Casper";
-    arglist[GOMEZ].filename = "Gomez.in"; arglist[GOMEZ].threadname = "Gomez";
-    
-    pthread_create(&t[VLAD], NULL, thread_func, (void *)&arglist[VLAD]);
-    pthread_create(&t[FRANK], NULL, thread_func, (void *)&arglist[FRANK]);
-    pthread_create(&t[BIGFOOT], NULL, thread_func, (void *)&arglist[BIGFOOT]);
-    pthread_create(&t[CASPER], NULL, thread_func, (void *)&arglist[CASPER]);
-    pthread_create(&t[GOMEZ], NULL, thread_func, (void *)&arglist[GOMEZ]);
+    int i;
 
-    pthread_join(t[VLAD], NULL);
-    pthread_join(t[FRANK], NULL);
-    pthread_join(t[BIGFOOT], NULL);
-    pthread_join(t[CASPER], NULL);
-    pthread_join(t[GOMEZ], NULL);
+    for(i = 0; i < MONSTERS; i++)
+    {
+        arglist[i].filename = filenames[i];
+        arglist[i].threadname = filenames[MONSTERS + i];
+        pthread_create(&t[i], NULL, thread_func, (void *)&arglist[i]);
+        pthread_detach(t[i]);
+    }
+
+    pthread_exit(NULL);
 }
